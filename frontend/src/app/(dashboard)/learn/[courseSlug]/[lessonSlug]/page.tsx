@@ -6,7 +6,6 @@ import { useRouter, useParams } from 'next/navigation';
 import { courseService, Course, Lesson } from '@/services/course';
 import { toast } from 'sonner';
 import { BookOpen, Loader2, ChevronLeft, ChevronRight, Menu, X, FileCode, CheckCircle } from 'lucide-react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 export default function LessonReaderPage() {
@@ -112,21 +111,21 @@ export default function LessonReaderPage() {
       // Render Headings
       if (line.startsWith('# ')) {
         return (
-          <h1 key={idx} className="text-2xl md:text-3xl font-extrabold text-white tracking-tight leading-snug mt-8 mb-4 border-b border-white/[0.04] pb-2">
+          <h1 key={idx} className="text-xl md:text-2xl font-extrabold text-white tracking-tight leading-snug mt-8 mb-4 border-b border-white/[0.04] pb-2">
             {line.substring(2)}
           </h1>
         );
       }
       if (line.startsWith('## ')) {
         return (
-          <h2 key={idx} className="text-xl md:text-2xl font-bold text-white tracking-tight leading-snug mt-6 mb-3">
+          <h2 key={idx} className="text-lg md:text-xl font-bold text-white tracking-tight leading-snug mt-6 mb-3">
             {line.substring(3)}
           </h2>
         );
       }
       if (line.startsWith('### ')) {
         return (
-          <h3 key={idx} className="text-lg font-semibold text-white tracking-tight leading-snug mt-5 mb-2">
+          <h3 key={idx} className="text-sm font-semibold text-white tracking-tight leading-snug mt-5 mb-2">
             {line.substring(4)}
           </h3>
         );
@@ -165,17 +164,17 @@ export default function LessonReaderPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] border border-white/[0.05] rounded-3xl overflow-hidden bg-[#030014]/40 backdrop-blur-xl relative">
+    <div className="flex h-[calc(100vh-5rem)] border border-white/[0.05] rounded-3xl overflow-hidden bg-[#030014]/40 backdrop-blur-xl relative select-none">
       
       {/* 1. Left Collapsible sidebar outline list */}
       <aside 
-        className={`flex flex-col border-r border-white/[0.05] bg-slate-950/60 backdrop-blur-2xl text-white transition-all duration-300 z-30 shrink-0 ${
+        className={`flex flex-col border-r border-white/[0.05] bg-slate-950/60 backdrop-blur-2xl text-white transition-all duration-300 z-30 shrink-0 overflow-hidden ${
           sidebarOpen ? 'w-64 translate-x-0' : 'w-0 -translate-x-full lg:w-0 lg:border-none'
         }`}
       >
         <div className="flex h-12 items-center justify-between px-4 border-b border-white/[0.05] bg-slate-950/30">
           <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase flex items-center gap-1.5">
-            <BookOpen className="h-3.5 w-3.5 text-purple-400" />
+            <BookOpen className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
             Lessons Outline
           </span>
           <button 
@@ -213,7 +212,7 @@ export default function LessonReaderPage() {
 
         <div className="p-3 border-t border-white/[0.05] bg-slate-950/40">
           <Link href={`/learn/${courseSlug}`}>
-            <Button variant="ghost" className="w-full text-slate-500 hover:text-slate-300 text-[10px] font-semibold tracking-wide h-8">
+            <Button variant="ghost" className="w-full text-slate-500 hover:text-slate-300 text-[10px] font-bold uppercase tracking-wider h-8">
               ← Outline Details
             </Button>
           </Link>
@@ -223,7 +222,7 @@ export default function LessonReaderPage() {
       {/* 2. Main Reader Content workspace */}
       <main className="flex-1 flex flex-col min-w-0 bg-[#030014]/25">
         {/* Top Control Bar */}
-        <div className="h-12 border-b border-white/[0.05] bg-slate-950/40 flex items-center justify-between px-6">
+        <div className="h-12 border-b border-white/[0.05] bg-slate-950/40 flex items-center justify-between px-6 shrink-0">
           <div className="flex items-center gap-3">
             {!sidebarOpen && (
               <button 
@@ -233,13 +232,13 @@ export default function LessonReaderPage() {
                 <Menu className="h-4 w-4" />
               </button>
             )}
-            <span className="text-[10px] font-semibold text-purple-400 uppercase tracking-widest truncate max-w-[200px]">
+            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest truncate max-w-[200px]">
               {course.title}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-semibold text-emerald-400 border border-emerald-500/20">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/20">
               <CheckCircle className="h-3 w-3" />
               Lesson Active
             </span>
@@ -247,12 +246,12 @@ export default function LessonReaderPage() {
         </div>
 
         {/* Dynamic Lesson Render body */}
-        <div className="flex-1 overflow-y-auto px-6 py-8 md:px-12 max-w-4xl mx-auto w-full relative">
+        <div className="flex-1 overflow-y-auto px-6 py-8 md:px-12 max-w-3xl mx-auto w-full relative select-text">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest">
+            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest leading-none block">
               COURSE LESSON {currentIdx + 1} OF {lessonsList.length}
             </span>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight leading-snug">
+            <h1 className="text-2xl font-extrabold text-white tracking-tight leading-snug mt-1">
               {lesson.title}
             </h1>
           </div>
@@ -266,7 +265,7 @@ export default function LessonReaderPage() {
           <div className="flex items-center justify-between pt-10 mt-12 border-t border-white/[0.05]">
             {prevLesson ? (
               <Link href={`/learn/${courseSlug}/${prevLesson.slug}`}>
-                <Button variant="outline" className="border-white/[0.05] bg-white/[0.01] text-slate-300 hover:bg-white/[0.05] hover:text-white text-xs font-semibold rounded-xl h-10 px-4">
+                <Button variant="outline" className="border-white/[0.05] bg-white/[0.01] text-slate-300 hover:bg-white/[0.05] hover:text-white text-xs font-semibold rounded-xl h-10 px-4 transition-all">
                   <ChevronLeft className="mr-1.5 h-4 w-4" />
                   {prevLesson.title}
                 </Button>
@@ -277,16 +276,16 @@ export default function LessonReaderPage() {
 
             {nextLesson ? (
               <Link href={`/learn/${courseSlug}/${nextLesson.slug}`}>
-                <Button className="bg-purple-600 hover:bg-purple-500 text-xs font-bold rounded-xl h-10 px-4 border border-purple-400/20 transition-all">
+                <Button className="bg-purple-600 hover:bg-purple-500 text-xs font-bold rounded-xl h-10 px-4 border border-purple-400/20 shadow-[0_0_15px_rgba(147,51,234,0.15)] transition-all">
                   Next Lesson
                   <ChevronRight className="ml-1.5 h-4 w-4" />
                 </Button>
               </Link>
             ) : (
               <Link href="/learn">
-                <Button className="bg-emerald-600 hover:bg-emerald-500 text-xs font-bold rounded-xl h-10 px-4 border border-emerald-400/20 transition-all">
+                <Button className="bg-emerald-600 hover:bg-emerald-500 text-xs font-bold rounded-xl h-10 px-4 border border-emerald-400/20 shadow-[0_0_15px_rgba(16,185,129,0.15)] transition-all">
                   Finish Path
-                  <CheckCircle className="ml-1.5 h-4 w-4" />
+                  <CheckCircle className="ml-1.5 h-4 w-4 animate-pulse" />
                 </Button>
               </Link>
             )}
