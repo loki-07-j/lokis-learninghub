@@ -1,0 +1,105 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Role {
+  id               Int               @id @default(autoincrement())
+  role_name        String            @unique
+  role_code        String            @unique
+  description      String?
+  users            User[]
+  role_permissions RolePermission[]
+  old_histories    UserRoleHistory[] @relation("OldRole")
+  new_histories    UserRoleHistory[] @relation("NewRole")
+
+  @@map("roles")
+}
+
+model Permission {
+  id              Int              @id @default(autoincrement())
+  permission_name String
+  permission_key  String           @unique
+  module_name     String
+  role_permissions RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id            Int        @id @default(autoincrement())
+  role_id       Int
+  permission_id Int
+  role          Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission    Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@unique([role_id, permission_id])
+  @@map("role_permissions")
+}
+
+model User {
+  id            String            @id @default(uuid())
+  name          String
+  email         String            @unique
+  password      String
+  role_id       Int
+  is_active     Boolean           @default(true)
+  created_at    DateTime          @default(now())
+  updated_at    DateTime          @updatedAt
+  role          Role              @relation(fields: [role_id], references: [id])
+  role_histories UserRoleHistory[] @relation("UserHistory")
+  changed_roles  UserRoleHistory[] @relation("ChangedByHistory")
+
+  @@map("users")
+}
+
+model UserRoleHistory {
+  id          Int      @id @default(autoincrement())
+  user_id     String
+  old_role_id Int
+  new_role_id Int
+  changed_by  String
+  changed_at  DateTime @default(now())
+
+  user        User     @relation("UserHistory", fields: [user_id], references: [id], onDelete: Cascade)
+  old_role    Role     @relation("OldRole", fields: [old_role_id], references: [id])
+  new_role    Role     @relation("NewRole", fields: [new_role_id], references: [id])
+  changer     User     @relation("ChangedByHistory", fields: [changed_by], references: [id])
+
+  @@map("user_role_history")
+}
+
+model Course {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  description  String
+  is_published Boolean  @default(false)
+  created_by   String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  
+  lessons      Lesson[]
+
+  @@map("courses")
+}
+
+model Lesson {
+  id           String   @id @default(uuid())
+  course_id    String
+  title        String
+  slug         String
+  content      String   @db.Text
+  sort_order   Int      @default(0)
+  is_published Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  course       Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+
+  @@unique([course_id, slug])
+  @@map("lessons")
+}

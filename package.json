@@ -1,0 +1,13 @@
+{
+  "name": "lokis-learninghub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev": "npx concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "start:backend": "npm run start --prefix backend",
+    "start:frontend": "npm run start --prefix frontend",
+    "start": "npx concurrently \"npm run start --prefix backend\" \"npm run start --prefix frontend\""
+  }
+}
