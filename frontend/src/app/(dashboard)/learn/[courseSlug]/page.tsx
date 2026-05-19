@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
 import { courseService, Course } from '@/services/course';
 import { toast } from 'sonner';
-import { BookOpen, Loader2, PlayCircle, Clock, Award, Shield, FileText, ChevronRight } from 'lucide-react';
+import { BookOpen, Loader2, PlayCircle, Clock, Award, Shield, FileText, ChevronRight, ArrowLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -51,10 +51,11 @@ export default function CourseOutlinePage() {
   const firstLessonSlug = hasLessons ? course.lessons![0].slug : '';
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Back to Catalog */}
-      <Link href="/learn" className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1.5 transition-colors font-medium">
-        ← Back to Catalog
+      <Link href="/learn" className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors font-semibold tracking-wide">
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back to Catalog
       </Link>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -64,7 +65,7 @@ export default function CourseOutlinePage() {
           <Card className="border-none bg-slate-950/45 backdrop-blur-2xl rounded-3xl p-6 md:p-8 space-y-6">
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
                   <Award className="h-3 w-3" />
                   Syllabus Path
                 </span>
@@ -73,10 +74,10 @@ export default function CourseOutlinePage() {
                   {hasLessons ? `${course.lessons!.length * 15} mins` : 'N/A'}
                 </span>
               </div>
-              <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight">
+              <h1 className="text-3xl font-extrabold text-white tracking-tight leading-tight">
                 {course.title}
               </h1>
-              <p className="text-slate-400 text-sm font-light leading-relaxed">
+              <p className="text-slate-400 text-xs font-light leading-relaxed">
                 {course.description}
               </p>
             </div>
@@ -84,16 +85,16 @@ export default function CourseOutlinePage() {
             {/* Course goals cards mock */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
               <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/[0.04] space-y-2">
-                <Shield className="h-5 w-5 text-purple-400" />
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Targeted Topics</h4>
-                <p className="text-[11px] text-slate-500 font-light leading-relaxed">
+                <Shield className="h-4.5 w-4.5 text-purple-400" />
+                <h4 className="text-[10px] font-bold text-white uppercase tracking-wider">Targeted Topics</h4>
+                <p className="text-[10px] text-slate-500 font-light leading-relaxed">
                   Focus on exact, high-legibility developer principles curated directly for production environments.
                 </p>
               </div>
               <div className="p-4 rounded-2xl bg-white/[0.01] border border-white/[0.04] space-y-2">
-                <PlayCircle className="h-5 w-5 text-indigo-400" />
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Interactive Drills</h4>
-                <p className="text-[11px] text-slate-500 font-light leading-relaxed">
+                <PlayCircle className="h-4.5 w-4.5 text-indigo-400" />
+                <h4 className="text-[10px] font-bold text-white uppercase tracking-wider">Interactive Drills</h4>
+                <p className="text-[10px] text-slate-500 font-light leading-relaxed">
                   Every lesson comes equipped with practice codes and direct technical assessments downstream.
                 </p>
               </div>
@@ -102,7 +103,7 @@ export default function CourseOutlinePage() {
             {hasLessons && (
               <div className="pt-6 border-t border-white/[0.04]">
                 <Link href={`/learn/${course.slug}/${firstLessonSlug}`}>
-                  <Button size="lg" className="w-full sm:w-auto relative group overflow-hidden bg-purple-600 hover:bg-purple-500 text-xs font-bold px-6 py-5 rounded-xl border border-purple-400/20 transition-all duration-300">
+                  <Button size="lg" className="w-full sm:w-auto relative group overflow-hidden bg-purple-600 hover:bg-purple-500 text-xs font-bold px-6 py-5 rounded-xl border border-purple-400/20 shadow-[0_0_20px_rgba(147,51,234,0.2)] transition-all duration-300 cursor-pointer">
                     <span className="relative z-10 flex items-center justify-center gap-2">
                       Start Syllabus Now
                       <PlayCircle className="h-4.5 w-4.5 group-hover:scale-110 transition-transform" />
@@ -142,12 +143,12 @@ export default function CourseOutlinePage() {
                       <div className="absolute -left-[27px] top-1 h-3 w-3 rounded-full bg-slate-900 border border-white/[0.1] group-hover:bg-purple-500 group-hover:border-purple-400/30 transition-all shadow-[0_0_10px_rgba(168,85,247,0.2)]" />
                       
                       <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-purple-400 uppercase tracking-widest">
+                        <span className="text-[9px] font-bold text-purple-400 uppercase tracking-widest leading-none block">
                           LESSON {idx + 1}
                         </span>
-                        <h4 className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors flex items-center gap-1.5">
+                        <h4 className="text-xs font-bold text-slate-300 group-hover:text-white transition-colors flex items-center gap-1 mt-0.5">
                           {lesson.title}
-                          <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-purple-400" />
+                          <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all text-purple-400 animate-pulse" />
                         </h4>
                       </div>
                     </div>

@@ -10,13 +10,10 @@ import {
   Trash2, 
   Edit3, 
   Eye, 
-  Check, 
   Loader2, 
-  ArrowRight, 
   FileText, 
   Settings, 
   Code,
-  FileCode,
   LayoutGrid,
   X
 } from 'lucide-react';
@@ -301,17 +298,17 @@ export default function AdminCoursesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2">
-            <Settings className="h-6 w-6 text-indigo-400" />
+            <Settings className="h-6 w-6 text-indigo-400 animate-spin" style={{ animationDuration: '8s' }} />
             Administrative Course Builder
           </h1>
-          <p className="text-xs text-slate-400 font-light mt-0.5">Author and structure syllabus courses, lessons, and code editor sandboxes.</p>
+          <p className="text-xs text-slate-400 font-light mt-0.5 font-light">Author and structure syllabus courses, lessons, and code editor sandboxes.</p>
         </div>
         <Button 
           onClick={() => setShowCourseModal(true)}
-          className="bg-purple-600 hover:bg-purple-500 text-xs font-bold rounded-xl border border-purple-400/20 transition-all cursor-pointer shadow-md"
+          className="bg-purple-600 hover:bg-purple-500 text-xs font-bold rounded-xl border border-purple-400/20 shadow-[0_0_15px_rgba(147,51,234,0.15)] transition-all cursor-pointer shadow-md"
         >
           <Plus className="mr-1.5 h-4 w-4" />
-          Create Course
+          Create Course Path
         </Button>
       </div>
 
@@ -372,8 +369,8 @@ export default function AdminCoursesPage() {
               <Card className="border-white/[0.05] bg-slate-950/40 backdrop-blur-2xl rounded-3xl p-5 space-y-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-extrabold text-white">{selectedCourse.title}</h2>
-                    <p className="text-[10px] text-slate-500 font-light truncate max-w-lg">Course UUID: {selectedCourse.id}</p>
+                    <h2 className="text-base font-extrabold text-white tracking-tight">{selectedCourse.title}</h2>
+                    <p className="text-[9px] text-slate-500 font-light truncate max-w-lg">Course UUID: {selectedCourse.id}</p>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -594,8 +591,8 @@ export default function AdminCoursesPage() {
 
       {/* Course Creator modal card layer */}
       {showCourseModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
-          <div className="w-full max-w-md animate-fade-in rounded-3xl p-[1px] bg-gradient-to-b from-purple-500/20 via-white/[0.03] to-indigo-500/20 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-3xl p-[1px] bg-gradient-to-b from-purple-500/20 via-white/[0.03] to-indigo-500/20 shadow-2xl">
             <Card className="border-none bg-[#030014]/90 backdrop-blur-2xl rounded-3xl p-5">
               <div className="flex justify-between items-center pb-4 border-b border-white/[0.05] mb-4">
                 <h3 className="text-xs font-bold text-white uppercase tracking-wider">Initialize Course Track</h3>
