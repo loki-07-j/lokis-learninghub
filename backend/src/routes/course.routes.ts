@@ -10,7 +10,19 @@ import {
   deleteCourse,
   createLesson,
   updateLesson,
-  deleteLesson
+  deleteLesson,
+  createModule,
+  updateModule,
+  deleteModule,
+  createTopic,
+  updateTopic,
+  deleteTopic,
+  createLessonBlock,
+  updateLessonBlock,
+  deleteLessonBlock,
+  reorderLessonBlocks,
+  updateTopicFlow,
+  getTopicContent
 } from '../controllers/course.controller';
 
 const router = Router();
@@ -39,7 +51,7 @@ const attachUserInfo = async (req: any, res: Response, next: NextFunction) => {
   }
 };
 
-// Middleware guarding administrative write endpoints
+// Middleware guarding administrative endpoints
 const adminOnly = (req: any, res: Response, next: NextFunction) => {
   const roleCode = req.user?.role_code;
   if (roleCode !== 'SUPER_ADMIN' && roleCode !== 'ADMIN') {
@@ -57,14 +69,35 @@ router.use(attachUserInfo);
 router.get('/', getCourses);
 router.get('/:slug', getCourseDetails);
 router.get('/:courseSlug/lessons/:lessonSlug', getLesson);
+router.get('/:courseSlug/topics/:topicSlug', getTopicContent);
 
 // Admin controls mapping
+
+// 1. Courses CRUD
 router.post('/', adminOnly, createCourse);
 router.put('/:id', adminOnly, updateCourse);
 router.delete('/:id', adminOnly, deleteCourse);
 
+// 2. Modules CRUD
+router.post('/modules', adminOnly, createModule);
+router.put('/modules/:id', adminOnly, updateModule);
+router.delete('/modules/:id', adminOnly, deleteModule);
+
+// 3. Topics CRUD
+router.post('/topics', adminOnly, createTopic);
+router.put('/topics/:id', adminOnly, updateTopic);
+router.delete('/topics/:id', adminOnly, deleteTopic);
+router.put('/topics/:id/flow', adminOnly, updateTopicFlow);
+
+// 4. Lessons CRUD (under topic ID context inside body)
 router.post('/lessons', adminOnly, createLesson);
 router.put('/lessons/:id', adminOnly, updateLesson);
 router.delete('/lessons/:id', adminOnly, deleteLesson);
+
+// 5. LessonBlocks CRUD
+router.post('/lessons/blocks', adminOnly, createLessonBlock);
+router.put('/lessons/blocks/:id', adminOnly, updateLessonBlock);
+router.delete('/lessons/blocks/:id', adminOnly, deleteLessonBlock);
+router.post('/lessons/:lessonId/blocks/reorder', adminOnly, reorderLessonBlocks);
 
 export default router;

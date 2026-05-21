@@ -1,15 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Loader2, Mail, Lock, User, Sparkles, ArrowLeft } from 'lucide-react';
+import { Loader2, Mail, Lock, User, Eye, EyeOff, ArrowRight, Check } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface PasswordStrength {
+  score: 0 | 1 | 2 | 3 | 4;
+  label: string;
+  color: string;
+  bar: string;
+}
+
+function evaluatePassword(pwd: string): PasswordStrength {
+  if (!pwd) return { score: 0, label: 'Empty',  color: 'text-slate-700', bar: 'bg-slate-800' };
+  let score = 0;
+  if (pwd.length >= 6) score++;
+  if (pwd.length >= 10) score++;
+  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd) && /[^A-Za-z0-9]/.test(pwd)) score++;
+  const variants = [
+    { label: 'Too short',   color: 'text-red-400',     bar: 'bg-red-500'     },
+    { label: 'Weak',        color: 'text-orange-400',  bar: 'bg-orange-500'  },
+    { label: 'Fair',        color: 'text-amber-400',   bar: 'bg-amber-500'   },
+    { label: 'Strong',      color: 'text-emerald-400', bar: 'bg-emerald-500' },
+    { label: 'Bulletproof', color: 'text-teal-400',    bar: 'bg-teal-400'    },
+  ] as const;
+  return { score: score as 0 | 1 | 2 | 3 | 4, ...variants[score] };
+}
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -18,153 +38,172 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const strength = useMemo(() => evaluatePassword(password), [password]);
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
+  const passwordsMismatch = confirmPassword.length > 0 && password !== confirmPassword;
 
+  const handleSubmit = async (e: { preventDefault(): void }) => {
+    e.preventDefault();
     if (!name || !email || !password || !confirmPassword) {
       toast.error('All fields are required');
       return;
     }
-
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
-
     if (password.length < 6) {
       toast.error('Password must be at least 6 characters long');
       return;
     }
-
     setLoading(true);
     const success = await register(name, email, password);
     setLoading(false);
-
-    if (success) {
-      router.push('/dashboard');
-    }
+    if (success) router.push('/dashboard');
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-[#030014] p-4 relative overflow-hidden select-none">
-      
-      {/* Floating Back to Home Link */}
-      <Link 
-        href="/" 
-        className="absolute top-6 left-6 text-xs text-slate-500 hover:text-slate-300 transition-colors flex items-center gap-1.5 font-bold z-20 cursor-pointer"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Back to Home
-      </Link>
-
-      {/* Decorative gradient glowing mesh background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(120,119,198,0.1),transparent_50%)]" />
-      <div className="absolute top-1/4 left-1/2 -z-10 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-indigo-600/5 blur-[120px]" />
-
-      <div className="w-full max-w-sm rounded-3xl p-[1px] bg-gradient-to-b from-white/[0.08] via-white/[0.02] to-transparent shadow-2xl relative z-10 animate-fade-in">
-        <Card className="border-none bg-slate-950/45 backdrop-blur-2xl rounded-3xl p-5 md:p-6">
-          <CardHeader className="space-y-1.5 text-center p-0 pb-4">
-            <div className="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 shadow-[0_0_15px_rgba(99,102,241,0.35)]">
-              <Sparkles className="h-4 w-4 text-white animate-pulse" />
-            </div>
-            <CardTitle className="text-lg font-extrabold tracking-tight text-white">Create Account</CardTitle>
-            <CardDescription className="text-slate-400 text-[11px] font-light">
-              Sign up for a student profile to start learning tracks.
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-3 p-0 pb-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="pl-9 h-9 border-white/[0.05] bg-slate-900/40 text-white text-xs placeholder-slate-500 rounded-xl focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Email Address</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="name@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-9 h-9 border-white/[0.05] bg-slate-900/40 text-white text-xs placeholder-slate-500 rounded-xl focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-9 h-9 border-white/[0.05] bg-slate-900/40 text-white text-xs placeholder-slate-500 rounded-xl focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword" className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Confirm Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-9 h-9 border-white/[0.05] bg-slate-900/40 text-white text-xs placeholder-slate-500 rounded-xl focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/50 transition-all"
-                    required
-                  />
-                </div>
-              </div>
-            </CardContent>
-            <div className="flex flex-col space-y-4 pt-1">
-              <Button
-                type="submit"
-                className="w-full h-9 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl border border-purple-400/10 shadow-[0_0_20px_rgba(99,102,241,0.15)] transition-all duration-300 transform active:scale-[0.98] cursor-pointer"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating account...
-                  </>
-                ) : (
-                  'Sign Up'
-                )}
-              </Button>
-              <div className="text-center text-[11px] text-slate-400 font-light">
-                Already have an account?{' '}
-                <Link
-                  href="/login"
-                  className="text-indigo-400 hover:text-indigo-300 font-semibold transition-colors"
-                >
-                  Sign in
-                </Link>
-              </div>
-            </div>
-          </form>
-        </Card>
+    <>
+      {/* Header */}
+      <div className="mb-6">
+        <p className="text-[10px] font-bold tracking-[0.32em] uppercase text-purple-400/65 mb-3">
+          New Account
+        </p>
+        <h1 className="text-3xl md:text-[34px] font-extrabold tracking-[-0.03em] text-white leading-tight mb-2">
+          Create your{' '}
+          <span className="bg-gradient-to-r from-purple-400 via-indigo-300 to-pink-400 bg-clip-text text-transparent">
+            profile
+          </span>
+        </h1>
+        <p className="text-slate-500 text-sm font-light">
+          Build a learner profile in seconds — no credit card needed.
+        </p>
       </div>
-    </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-3.5">
+        {/* Name */}
+        <div>
+          <label htmlFor="name" className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.22em] mb-1.5">
+            Full Name
+          </label>
+          <div className="relative group">
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-purple-400 transition-colors" />
+            <input
+              id="name" type="text" autoComplete="name" placeholder="John Doe"
+              value={name} onChange={(e) => setName(e.target.value)}
+              className="w-full h-11 pl-11 pr-4 bg-white/[0.02] border border-white/[0.07] rounded-xl text-[13px] text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/40 focus:bg-white/[0.04] focus:shadow-[0_0_0_4px_rgba(168,85,247,0.08)] transition-all"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Email */}
+        <div>
+          <label htmlFor="email" className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.22em] mb-1.5">
+            Email Address
+          </label>
+          <div className="relative group">
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-purple-400 transition-colors" />
+            <input
+              id="email" type="email" autoComplete="email" placeholder="name@example.com"
+              value={email} onChange={(e) => setEmail(e.target.value)}
+              className="w-full h-11 pl-11 pr-4 bg-white/[0.02] border border-white/[0.07] rounded-xl text-[13px] text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/40 focus:bg-white/[0.04] focus:shadow-[0_0_0_4px_rgba(168,85,247,0.08)] transition-all"
+              required
+            />
+          </div>
+        </div>
+
+        {/* Password */}
+        <div>
+          <label htmlFor="password" className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.22em] mb-1.5">
+            Password
+          </label>
+          <div className="relative group">
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-purple-400 transition-colors" />
+            <input
+              id="password" type={showPwd ? 'text' : 'password'} autoComplete="new-password" placeholder="••••••••"
+              value={password} onChange={(e) => setPassword(e.target.value)}
+              className="w-full h-11 pl-11 pr-11 bg-white/[0.02] border border-white/[0.07] rounded-xl text-[13px] text-white placeholder-slate-600 focus:outline-none focus:border-purple-500/40 focus:bg-white/[0.04] focus:shadow-[0_0_0_4px_rgba(168,85,247,0.08)] transition-all"
+              required
+            />
+            <button type="button" onClick={() => setShowPwd((v) => !v)}
+              aria-label={showPwd ? 'Hide password' : 'Show password'}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-slate-500 hover:text-white hover:bg-white/5 transition-colors">
+              {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+
+          {/* Strength meter */}
+          {password.length > 0 && (
+            <div className="mt-2">
+              <div className="flex items-center gap-1.5 mb-1">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="flex-1 h-1 rounded-full bg-slate-800/80 overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-500 ${i < strength.score ? strength.bar : 'bg-transparent'}`}
+                      style={{ width: i < strength.score ? '100%' : '0%' }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className={`text-[10px] font-bold tracking-wide ${strength.color}`}>{strength.label}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Confirm Password */}
+        <div>
+          <label htmlFor="confirmPassword" className="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.22em] mb-1.5">
+            Confirm Password
+          </label>
+          <div className="relative group">
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-600 group-focus-within:text-purple-400 transition-colors" />
+            <input
+              id="confirmPassword" type={showPwd ? 'text' : 'password'} autoComplete="new-password" placeholder="••••••••"
+              value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+              className={`w-full h-11 pl-11 pr-11 bg-white/[0.02] border rounded-xl text-[13px] text-white placeholder-slate-600 focus:outline-none focus:bg-white/[0.04] transition-all ${
+                passwordsMismatch
+                  ? 'border-red-500/40 focus:border-red-500/60 focus:shadow-[0_0_0_4px_rgba(239,68,68,0.08)]'
+                  : passwordsMatch
+                  ? 'border-emerald-500/30 focus:border-emerald-500/50 focus:shadow-[0_0_0_4px_rgba(16,185,129,0.08)]'
+                  : 'border-white/[0.07] focus:border-purple-500/40 focus:shadow-[0_0_0_4px_rgba(168,85,247,0.08)]'
+              }`}
+              required
+            />
+            {passwordsMatch && (
+              <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+            )}
+          </div>
+          {passwordsMismatch && (
+            <p className="mt-1.5 text-[11px] text-red-400 font-medium">Passwords don't match</p>
+          )}
+        </div>
+
+        {/* Submit */}
+        <button type="submit" disabled={loading}
+          className="relative w-full h-12 mt-1 flex items-center justify-center gap-2 text-[13px] font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl border border-purple-400/25 shadow-[0_0_28px_rgba(147,51,234,0.25)] hover:shadow-[0_0_40px_rgba(147,51,234,0.4)] transition-all duration-300 group overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed active:scale-[0.98]">
+          <span className="absolute inset-0 translate-x-[-110%] group-hover:translate-x-[110%] transition-transform duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg]" />
+          {loading ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Creating account…</>
+          ) : (
+            <span className="relative z-10 flex items-center gap-2">
+              Create Account <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+            </span>
+          )}
+        </button>
+      </form>
+
+      {/* Footer */}
+      <p className="text-center text-[13px] text-slate-500 font-light mt-6">
+        Already have an account?{' '}
+        <Link href="/login" className="text-purple-400 hover:text-purple-300 font-semibold transition-colors">
+          Sign in
+        </Link>
+      </p>
+    </>
   );
 }
