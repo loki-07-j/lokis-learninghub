@@ -8,6 +8,12 @@ import { errorHandler } from './middlewares/errorHandler';
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
 import courseRoutes from './routes/course.routes';
+import practiceRoutes from './routes/practice.routes';
+import progressRoutes from './routes/progress.routes';
+import plannerRoutes from './routes/planner.routes';
+import testRoutes from './routes/test.routes';
+import revisionRoutes from './routes/revision.routes';
+import rapidFireRoutes from './routes/rapidfire.routes';
 
 dotenv.config();
 
@@ -23,6 +29,12 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/courses', courseRoutes);
+app.use('/api/practice', practiceRoutes);
+app.use('/api/progress', progressRoutes);
+app.use('/api/planner', plannerRoutes);
+app.use('/api/tests', testRoutes);
+app.use('/api/revision', revisionRoutes);
+app.use('/api/rapid-fire', rapidFireRoutes);
 
 // Basic health check
 app.get('/api/health', (req, res) => {

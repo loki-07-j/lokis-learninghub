@@ -20,10 +20,10 @@ model Role {
 }
 
 model Permission {
-  id              Int              @id @default(autoincrement())
-  permission_name String
-  permission_key  String           @unique
-  module_name     String
+  id               Int              @id @default(autoincrement())
+  permission_name  String
+  permission_key   String           @unique
+  module_name      String
   role_permissions RolePermission[]
 
   @@map("permissions")
@@ -41,17 +41,18 @@ model RolePermission {
 }
 
 model User {
-  id            String            @id @default(uuid())
-  name          String
-  email         String            @unique
-  password      String
-  role_id       Int
-  is_active     Boolean           @default(true)
-  created_at    DateTime          @default(now())
-  updated_at    DateTime          @updatedAt
-  role          Role              @relation(fields: [role_id], references: [id])
+  id             String            @id @default(uuid())
+  name           String
+  email          String            @unique
+  password       String
+  role_id        Int
+  is_active      Boolean           @default(true)
+  created_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
+  role           Role              @relation(fields: [role_id], references: [id])
   role_histories UserRoleHistory[] @relation("UserHistory")
   changed_roles  UserRoleHistory[] @relation("ChangedByHistory")
+  practice_progress PracticeProgress?
 
   @@map("users")
 }
@@ -64,10 +65,10 @@ model UserRoleHistory {
   changed_by  String
   changed_at  DateTime @default(now())
 
-  user        User     @relation("UserHistory", fields: [user_id], references: [id], onDelete: Cascade)
-  old_role    Role     @relation("OldRole", fields: [old_role_id], references: [id])
-  new_role    Role     @relation("NewRole", fields: [new_role_id], references: [id])
-  changer     User     @relation("ChangedByHistory", fields: [changed_by], references: [id])
+  user     User @relation("UserHistory", fields: [user_id], references: [id], onDelete: Cascade)
+  old_role Role @relation("OldRole", fields: [old_role_id], references: [id])
+  new_role Role @relation("NewRole", fields: [new_role_id], references: [id])
+  changer  User @relation("ChangedByHistory", fields: [changed_by], references: [id])
 
   @@map("user_role_history")
 }
@@ -81,25 +82,511 @@ model Course {
   created_by   String
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
-  
-  lessons      Lesson[]
+
+  modules Module[]
 
   @@map("courses")
 }
 
-model Lesson {
+model Module {
   id           String   @id @default(uuid())
   course_id    String
   title        String
   slug         String
-  content      String   @db.Text
+  description  String?  @db.Text
   sort_order   Int      @default(0)
   is_published Boolean  @default(false)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
 
-  course       Course   @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  course Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  topics Topic[]
 
   @@unique([course_id, slug])
+  @@map("modules")
+}
+
+model Topic {
+  id           String   @id @default(uuid())
+  module_id    String
+  title        String
+  slug         String
+  description  String?  @db.Text
+  sort_order   Int      @default(0)
+  is_published Boolean  @default(false)
+  flow_content Json?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  module  Module   @relation(fields: [module_id], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+  practice_questions PracticeQuestion[]
+  concept_masteries  ConceptMastery[]
+
+  @@unique([module_id, slug])
+  @@map("topics")
+}
+
+model Lesson {
+  id           String   @id @default(uuid())
+  topic_id     String
+  title        String
+  slug         String
+  sort_order   Int      @default(0)
+  is_published Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  topic  Topic         @relation(fields: [topic_id], references: [id], onDelete: Cascade)
+  blocks LessonBlock[]
+
+  @@unique([topic_id, slug])
   @@map("lessons")
+}
+
+model LessonBlock {
+  id               String   @id @default(uuid())
+  lesson_id        String
+  block_type       String // WHY, CONCEPT, INTERNAL_WORKING, VISUAL_FLOW, REAL_WORLD, MISTAKES, DEBUGGING, INTERVIEW, CHALLENGE, PRACTICE, SUMMARY, AI_EXPLORE
+  title            String
+  subtitle         String?
+  content_json     Json // Dynamic block content
+  sort_order       Int      @default(0)
+  difficulty_level String   @default("BEGINNER") // BEGINNER, INTERMEDIATE, ADVANCED
+  estimated_time   Int      @default(5) // in minutes
+  is_interactive   Boolean  @default(false)
+  is_required      Boolean  @default(true)
+  created_by       String?
+  updated_by       String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  lesson Lesson @relation(fields: [lesson_id], references: [id], onDelete: Cascade)
+
+  @@map("lesson_blocks")
+}
+
+// ========== PHASE B: THINKING VALIDATION SYSTEM ==========
+
+enum QuestionType {
+  MCQ
+  MULTI_SELECT
+  DEBUG_BASED
+  OUTPUT_PREDICTION
+  SCENARIO_ANALYSIS
+  ARCHITECTURE_REASONING
+  PROBLEM_SOLVING
+  CODE_COMPLETION
+  FLOW_SEQUENCING
+}
+
+enum ThinkingType {
+  LOGIC
+  DEBUGGING
+  PERFORMANCE
+  ARCHITECTURE
+  SECURITY
+  REAL_WORLD
+  INTERVIEW
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum InterviewMode {
+  RAPID_FIRE
+  EXPLAIN_THINKING
+  DEBUGGING_ROUND
+  ARCHITECTURE_DISCUSSION
+}
+
+model PracticeQuestion {
+  id                    String   @id @default(uuid())
+  topic_id              String
+  question_type         QuestionType
+  thinking_type         ThinkingType
+  title                 String
+  question_text         String   @db.Text
+  scenario_context      String?  @db.Text
+  options_json          Json? // For MCQ, MULTI_SELECT, FLOW_SEQUENCING
+  correct_answer        Json // Can be string, array, or object
+  expected_reasoning    Json? // What mental model we're testing
+  explanation           String   @db.Text
+  visual_reference      String? // URL to diagram/flowchart
+  complexity_score      Int      @default(2) // 1-5
+  estimated_time        Int      @default(300) // seconds
+  difficulty_level      DifficultyLevel @default(BEGINNER)
+  is_active             Boolean  @default(true)
+  created_by            String
+  updated_by            String?
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+
+  topic             Topic              @relation(fields: [topic_id], references: [id], onDelete: Cascade)
+  practice_sessions PracticeSession[]
+  interview_answers InterviewAnswer[]
+
+  @@index([topic_id])
+  @@index([thinking_type])
+  @@index([question_type])
+  @@map("practice_questions")
+}
+
+model ThinkingScore {
+  id              String   @id @default(uuid())
+  user_id         String
+  thinking_type   ThinkingType
+  current_score   Int      @default(0) // 0-100
+  attempts_count  Int      @default(0)
+  correct_count   Int      @default(0)
+  weak_concepts   Json? // Array of weak concept strings
+  updated_at      DateTime @updatedAt
+  created_at      DateTime @default(now())
+
+  @@unique([user_id, thinking_type])
+  @@index([user_id])
+  @@map("thinking_scores")
+}
+
+model PracticeSession {
+  id                 String   @id @default(uuid())
+  user_id            String
+  question_id        String
+  thinking_type      ThinkingType
+  user_answer        Json // Store submitted answer
+  reasoning_provided String?  @db.Text // User's reasoning
+  is_correct         Boolean
+  thinking_score     Int      @default(0) // 0-100
+  correctness_score  Int      @default(0) // 0-50
+  reasoning_score    Int      @default(0) // 0-30
+  time_efficiency    Int      @default(0) // 0-10
+  time_taken         Int      @default(0) // seconds
+  feedback           Json? // Structured feedback
+  completed_at       DateTime @default(now())
+  created_at         DateTime @default(now())
+
+  question_data PracticeQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([question_id])
+  @@map("practice_sessions")
+}
+
+model PracticeProgress {
+  id                        String   @id @default(uuid())
+  user_id                   String   @unique
+  topic_id                  String?
+  total_questions           Int      @default(0)
+  questions_completed       Int      @default(0)
+  questions_correct         Int      @default(0)
+  overall_mastery_score     Int      @default(0) // 0-100
+  thinking_type_breakdown   Json? // {LOGIC: 75, DEBUGGING: 60, ...}
+  last_practice_date        DateTime?
+  current_streak            Int      @default(0)
+  longest_streak            Int      @default(0)
+  updated_at                DateTime @updatedAt
+  created_at                DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("practice_progress")
+}
+
+model InterviewSession {
+  id                   String   @id @default(uuid())
+  user_id              String
+  mode                 InterviewMode
+  questions_attempted  Int      @default(0)
+  questions_correct    Int      @default(0)
+  confidence_score     Int      @default(0) // 0-100
+  thinking_quality     Int      @default(0) // 0-100
+  areas_to_improve     Json? // Array of strings
+  completed_at         DateTime @default(now())
+  created_at           DateTime @default(now())
+
+  interview_answers InterviewAnswer[]
+
+  @@index([user_id])
+  @@map("interview_sessions")
+}
+
+model InterviewAnswer {
+  id                  String   @id @default(uuid())
+  interview_session_id String
+  question_id         String
+  user_answer         Json
+  reasoning_provided  String?  @db.Text
+  is_correct          Boolean
+  thinking_score      Int      @default(0)
+  confidence_level    Int      @default(0) // 1-10
+  feedback            Json?
+  time_taken          Int      @default(0) // seconds
+  created_at          DateTime @default(now())
+
+  interview_session InterviewSession @relation(fields: [interview_session_id], references: [id], onDelete: Cascade)
+  question_data     PracticeQuestion @relation(fields: [question_id], references: [id], onDelete: Cascade)
+
+  @@index([interview_session_id])
+  @@index([question_id])
+  @@map("interview_answers")
+}
+
+// ========== PHASE C: PROGRESS + LEARNING INTELLIGENCE ==========
+
+model ConceptMastery {
+  id                String    @id @default(uuid())
+  user_id           String
+  topic_id          String
+  mastery_score     Int       @default(0)   // 0-100
+  lessons_completed Int       @default(0)
+  practice_attempts Int       @default(0)
+  correct_attempts  Int       @default(0)
+  last_activity_at  DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  topic Topic @relation(fields: [topic_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, topic_id])
+  @@index([user_id])
+  @@map("concept_mastery")
+}
+
+model DailyActivity {
+  id                 String   @id @default(uuid())
+  user_id            String
+  activity_date      DateTime @db.Date
+  questions_answered Int      @default(0)
+  correct_count      Int      @default(0)
+  minutes_active     Int      @default(0)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@unique([user_id, activity_date])
+  @@index([user_id])
+  @@map("daily_activity")
+}
+
+enum TargetRole {
+  BACKEND
+  FRONTEND
+  FULLSTACK
+  DEVOPS
+  DATA_ENGINEER
+}
+
+enum PlannerSkillLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+model LearningPlan {
+  id             String            @id @default(uuid())
+  user_id        String            @unique
+  target_role    TargetRole
+  skill_level    PlannerSkillLevel
+  hours_per_day  Int               @default(2)
+  duration_weeks Int               @default(8)
+  target_date    DateTime?
+  roadmap_json   Json
+  is_active      Boolean           @default(true)
+  created_at     DateTime          @default(now())
+  updated_at     DateTime          @updatedAt
+
+  checkpoints PlanCheckpoint[]
+
+  @@map("learning_plans")
+}
+
+model PlanCheckpoint {
+  id                String    @id @default(uuid())
+  plan_id           String
+  week_number       Int
+  day_number        Int
+  title             String
+  description       String?
+  type              String    // LESSON, PRACTICE, REVISION, INTERVIEW
+  reference_id      String?
+  estimated_minutes Int       @default(20)
+  is_completed      Boolean   @default(false)
+  completed_at      DateTime?
+  created_at        DateTime  @default(now())
+
+  plan LearningPlan @relation(fields: [plan_id], references: [id], onDelete: Cascade)
+
+  @@index([plan_id])
+  @@index([plan_id, week_number, day_number])
+  @@map("plan_checkpoints")
+}
+
+// ========== DYNAMIC TEST ENGINE ==========
+
+model Test {
+  id            String          @id @default(uuid())
+  title         String
+  slug          String          @unique
+  description   String?         @db.Text
+  category      String
+  duration_secs Int             @default(120)
+  passing_score Int             @default(75)
+  difficulty    DifficultyLevel @default(BEGINNER)
+  is_published  Boolean         @default(false)
+  created_by    String
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+
+  questions TestQuestion[]
+  attempts  TestAttempt[]
+
+  @@map("tests")
+}
+
+model TestQuestion {
+  id             String   @id @default(uuid())
+  test_id        String
+  question_text  String   @db.Text
+  options_json   Json
+  correct_answer Int
+  explanation    String   @db.Text
+  sort_order     Int      @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  test Test @relation(fields: [test_id], references: [id], onDelete: Cascade)
+
+  @@index([test_id])
+  @@map("test_questions")
+}
+
+model TestAttempt {
+  id           String   @id @default(uuid())
+  test_id      String
+  user_id      String
+  answers_json Json
+  score        Int
+  is_passed    Boolean
+  time_taken   Int      @default(0)
+  completed_at DateTime @default(now())
+
+  test Test @relation(fields: [test_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([test_id])
+  @@map("test_attempts")
+}
+
+// ========== DYNAMIC REVISION ENGINE ==========
+
+enum RevisionRating {
+  HARD
+  MEDIUM
+  EASY
+}
+
+model RevisionDeck {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  description  String?  @db.Text
+  category     String
+  is_published Boolean  @default(false)
+  created_by   String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  cards RevisionCard[]
+
+  @@map("revision_decks")
+}
+
+model RevisionCard {
+  id          String          @id @default(uuid())
+  deck_id     String
+  question    String          @db.Text
+  answer      String          @db.Text
+  tip         String?         @db.Text
+  tags        Json?
+  difficulty  DifficultyLevel @default(BEGINNER)
+  sort_order  Int             @default(0)
+  created_at  DateTime        @default(now())
+  updated_at  DateTime        @updatedAt
+
+  deck     RevisionDeck          @relation(fields: [deck_id], references: [id], onDelete: Cascade)
+  progress UserRevisionProgress[]
+
+  @@index([deck_id])
+  @@map("revision_cards")
+}
+
+model UserRevisionProgress {
+  id          String         @id @default(uuid())
+  user_id     String
+  card_id     String
+  rating      RevisionRating
+  reviewed_at DateTime       @default(now())
+
+  card RevisionCard @relation(fields: [card_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, card_id])
+  @@index([user_id])
+  @@map("user_revision_progress")
+}
+
+// ========== DYNAMIC RAPID FIRE ENGINE ==========
+
+model RapidFirePool {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  category     String
+  description  String?  @db.Text
+  is_published Boolean  @default(false)
+  created_by   String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  questions RapidFireQuestion[]
+  sessions  RapidFireSession[]
+
+  @@map("rapid_fire_pools")
+}
+
+model RapidFireQuestion {
+  id             String   @id @default(uuid())
+  pool_id        String
+  question_text  String   @db.Text
+  options_json   Json
+  correct_answer Int
+  explanation    String?  @db.Text
+  sort_order     Int      @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  pool RapidFirePool @relation(fields: [pool_id], references: [id], onDelete: Cascade)
+
+  @@index([pool_id])
+  @@map("rapid_fire_questions")
+}
+
+model RapidFireSession {
+  id              String   @id @default(uuid())
+  pool_id         String
+  user_id         String
+  score           Int      @default(0)
+  total_questions Int      @default(0)
+  correct_count   Int      @default(0)
+  streak          Int      @default(0)
+  time_taken      Int      @default(0)
+  completed_at    DateTime @default(now())
+
+  pool RapidFirePool @relation(fields: [pool_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("rapid_fire_sessions")
 }
